@@ -6,6 +6,8 @@ import HttpStatusCode from '../Responses/HttpStatusCode';
 import ServerErrorException from '../Erros/ServerErrorException';
 import IdInvalidException from '../Erros/IdInvalidException';
 import NoContentException from '../Erros/NoContentException';
+import responseCreate from '../Responses/ResponseCreate';
+import responseOk from '../Responses/ResponseOk';
 
 class UserController extends Controller {
   constructor() {
@@ -21,7 +23,7 @@ class UserController extends Controller {
   private async list(req: Request, res: Response, next: NextFunction): Promise<Response> {
     try {
       const users = await User.find();
-      return res.send(users);
+      return res.send(responseOk(res, users));
     } catch (error) {
       return res.send(new ServerErrorException(error));
     }
@@ -34,7 +36,7 @@ class UserController extends Controller {
 
       const user = await User.findById(id);
 
-      return res.send(user);
+      return res.send(responseOk(res, user));
     } catch (error) {
       return res.send(new ServerErrorException(error));
     }
@@ -44,7 +46,7 @@ class UserController extends Controller {
     try {
       const user = await User.create(req.body);
 
-      return res.send(user);
+      return res.send(responseCreate(res, user));
     } catch (error) {
       return res.send(new ServerErrorException(error));
     }
@@ -57,7 +59,7 @@ class UserController extends Controller {
 
       const user = await User.findByIdAndUpdate(id, req.body, { new: true });
 
-      return res.send(user);
+      return res.send(responseOk(res, user));
     } catch (error) {
       return res.send(new ServerErrorException(error));
     }
@@ -72,7 +74,7 @@ class UserController extends Controller {
 
       if (user) {
         user.deleteOne();
-        return res.send(user);
+        return res.send(responseOk(res, user));
       }
       return res.status(HttpStatusCode.NO_CONTENT).send(new NoContentException());
     } catch (error) {
