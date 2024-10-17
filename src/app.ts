@@ -22,7 +22,9 @@ private initMongoose(): void {
 }
 
 private connectDatabase(): void {
-  mongoose.connect('mongodb+srv://Curso-fullstack:<6yiwkzcbG8jUkIYo>@curso.8h63m.mongodb.net/Curso-java?retryWrites=true&w=majority&appName=Curso', {
+  mongoose.connect('mongodb+srv://Curso-fullstack:1LjyRCOWWGgfLIzI@curso.8h63m.mongodb.net/Curso-java?retryWrites=true&w=majority&appName=Curso', {
+    serverSelectionTimeoutMS: 30000, // Increase timeout to 30 seconds
+    socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
   });
 }
 
