@@ -37,7 +37,7 @@ function getMessage(error: { name: string; }): string {
   return '';
 }
 
-function isKeyUniqueError(error) {
+function isKeyUniqueError(error: { name: string; code?: number }): boolean {
   return isMongoError(error) && error.code === 11000;
 }
 
