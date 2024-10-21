@@ -23,11 +23,11 @@ const TaskSchema = new Schema({
   status: {
     type: String,
     validate: {
-      validator: (value) => {
+      validator: (value: StatusEnum) => {
         if (value === StatusEnum.OPEN || value === StatusEnum.FINISHED) return true;
         return false;
       },
-      message: (props) => `${props.value} é um valor inválido.`,
+      message: (props: { value: any; }) => `${props.value} é um valor inválido.`,
     },
     required: [true, 'Status é obrigatório.'],
     uppercase: true,

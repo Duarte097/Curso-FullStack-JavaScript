@@ -1,19 +1,19 @@
 import { NextFunction, Request, Response } from 'express';
 import Controller from './Controllers';
-import User from '../Schemas/user';
 import ValidationService from '../Services/ValidationService';
 import ServerErrorException from '../Erros/ServerErrorException';
 import NoContentException from '../Erros/NoContentException';
 import responseCreate from '../Responses/ResponseCreate';
 import responseOk from '../Responses/ResponseOk';
-import UserServices from '../Services/UserServices';
+import Task, { TaskInterface } from '../Schemas/Task';
+import TaskServices from '../Services/TaskServices';
 
-class UserController extends Controller {
+class TaskController extends Controller {
   constructor() {
-    super('/user');
+    super('/task');
   }
   protected initRoutes(): void {
-    this.router.get(this.path, this.list);
+    this.router.get(`${this.path}/:filter/:_id`, this.list);
     this.router.get(`${this.path}/:id`, this.findById);
     this.router.post(this.path, this.create);
     this.router.put(`${this.path}/:id`, this.edit);
@@ -21,9 +21,9 @@ class UserController extends Controller {
   }
   private async list(req: Request, res: Response, next: NextFunction): Promise<Response | undefined> {
     try {
-      const users = await User.find();
+      const tarefas = await Task.find(TaskServices.getParamsList(req)).populate('responsible');
 
-      if (users.length) return responseOk(res, users);
+      if (tarefas.length) return responseOk(res, tarefas);
       next(new NoContentException());
     } catch (error) {
       next(new ServerErrorException(error));
@@ -35,8 +35,8 @@ class UserController extends Controller {
       const { id } = req.params;
       if (ValidationService.validateId(id, next)) return;
 
-      const user = await User.findById(id);
-      if (user) return responseOk(res, user);
+      const task = await Task.findById(id);
+      if (task) return responseOk(res, task);
       next(new NoContentException());
     } catch (error) {
       next(new ServerErrorException(error));
@@ -45,9 +45,16 @@ class UserController extends Controller {
 
   private async create(req: Request, res: Response, next: NextFunction): Promise<Response | undefined> {
     try {
-      const user = await User.create(req.body);
+      let task: TaskInterface = req.body;
+      TaskServices.checkStatusFinished(task);
+      task = await Task.create(task);
+      const foundTask = await Task.findById(task.id).populate('responsible');
+      if (!foundTask) {
+        throw new Error('Task not found');
+      }
+      task = foundTask;
 
-      return responseCreate(res, user);
+      return responseCreate(res, task);
     } catch (error) {
       next(new ServerErrorException(error));
     }
@@ -57,9 +64,11 @@ class UserController extends Controller {
     try {
       const { id } = req.params;
       if (ValidationService.validateId(id, next)) return;
+      const task: TaskInterface = req.body;
+      TaskServices.checkStatusFinished(task);
 
-      const user = await User.findByIdAndUpdate(id, req.body, { new: true });
-      if (user) responseOk(res, user);
+      const updatedTask = await Task.findByIdAndUpdate(id, req.body, { new: true });
+      if (updatedTask) return responseOk(res, updatedTask);
       next(new NoContentException());
     } catch (error) {
       next(new ServerErrorException(error));
@@ -71,12 +80,11 @@ class UserController extends Controller {
       const { id } = req.params;
 
       if (ValidationService.validateId(id, next)) return;
-      if (await UserServices.validateExistAnyTask(id, next)) return;
 
-      const user = await User.findById(id);
-      if (user) {
-        user.deleteOne();
-        return responseOk(res, user);
+      const task = await Task.findById(id);
+      if (task) {
+        task.deleteOne();
+        return responseOk(res, task);
       }
       next(new NoContentException());
     } catch (error) {
@@ -84,4 +92,4 @@ class UserController extends Controller {
     }
   }
 }
-export default UserController;
+export default TaskController;
